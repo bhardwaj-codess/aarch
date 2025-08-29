@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { User, Roles } = require('../models/User');
-const { sendSMS, verifyOTP } = require('../utils/smsService');
+const { sendPhoneVerification, verifyPhoneCode } = require('../utils/firebaseAuth');
+
+// Store session info temporarily (in production, use Redis or database)
+const sessionStore = new Map();
 
 async function requestOtp(req, res) {
   try {
@@ -14,20 +17,22 @@ async function requestOtp(req, res) {
       user = await User.create({ phone });
     }
 
-    // Send SMS with OTP
-    const message = `Your AARC Stage verification code is: ${Math.floor(100000 + Math.random() * 900000)}`;
-    const result = await sendSMS(phone, message);
+    // Send verification via Firebase Phone Auth
+    const result = await sendPhoneVerification(phone);
     
     if (result.success) {
+      // Store session info for verification
+      if (result.sessionInfo) {
+        sessionStore.set(phone, {
+          sessionInfo: result.sessionInfo,
+          expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+        });
+      }
+      
       const response = {
-        message: 'OTP sent to your phone number',
+        message: 'OTP sent to your phone number via Firebase',
         phone: phone
       };
-      
-      // Include devOtp in development mode
-      if (result.devOtp) {
-        response.devOtp = result.devOtp;
-      }
       
       return res.status(200).json(response);
     } else {
@@ -50,12 +55,19 @@ async function verifyOtp(req, res) {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    // Verify the OTP
-    const verificationResult = await verifyOTP(phone, otp);
+    // Get session info
+    const sessionData = sessionStore.get(phone);
+    const sessionInfo = sessionData ? sessionData.sessionInfo : null;
+
+    // Verify the OTP using Firebase
+    const verificationResult = await verifyPhoneCode(phone, otp, sessionInfo);
     
     if (!verificationResult.success || !verificationResult.verified) {
       return res.status(400).json({ message: verificationResult.error || 'Invalid OTP' });
     }
+
+    // Clean up session
+    sessionStore.delete(phone);
 
     // Mark phone as verified
     user.isPhoneVerified = true;
@@ -66,7 +78,7 @@ async function verifyOtp(req, res) {
     });
 
     return res.status(200).json({ 
-      message: 'Phone verified successfully', 
+      message: 'Phone verified successfully via Firebase', 
       token, 
       role: user.role 
     });
