@@ -1,32 +1,40 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { User, Roles } = require('../models/User');
-const { generateOtp, hashOtp } = require('../utils/otp');
-
-const OTP_EXP_MINUTES = parseInt(process.env.OTP_EXP_MINUTES || '5', 10);
+const { sendSMS, verifyOTP } = require('../utils/smsService');
 
 async function requestOtp(req, res) {
   try {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ message: 'Phone is required' });
 
-    const otp = generateOtp(6);
-    const otpHash = hashOtp(otp, phone);
-    const otpExpiresAt = new Date(Date.now() + OTP_EXP_MINUTES * 60 * 1000);
-
+    // Create or find user
     let user = await User.findOne({ phone });
     if (!user) {
-      user = await User.create({ phone, otpHash, otpExpiresAt });
-    } else {
-      user.otpHash = otpHash;
-      user.otpExpiresAt = otpExpiresAt;
-      await user.save();
+      user = await User.create({ phone });
     }
 
-    // TODO: Integrate SMS provider. For now, return OTP only in development.
-    const payload = process.env.NODE_ENV === 'development' ? { devOtp: otp } : {};
-    return res.status(200).json({ message: 'OTP sent', ...payload });
+    // Send SMS with OTP
+    const message = `Your AARC Stage verification code is: ${Math.floor(100000 + Math.random() * 900000)}`;
+    const result = await sendSMS(phone, message);
+    
+    if (result.success) {
+      const response = {
+        message: 'OTP sent to your phone number',
+        phone: phone
+      };
+      
+      // Include devOtp in development mode
+      if (result.devOtp) {
+        response.devOtp = result.devOtp;
+      }
+      
+      return res.status(200).json(response);
+    } else {
+      return res.status(500).json({ message: 'Failed to send OTP', error: result.error });
+    }
   } catch (err) {
+    console.error('Request OTP error:', err);
     return res.status(500).json({ message: 'Failed to request OTP' });
   }
 }
@@ -36,30 +44,34 @@ async function verifyOtp(req, res) {
     const { phone, otp } = req.body;
     if (!phone || !otp) return res.status(400).json({ message: 'Phone and OTP are required' });
 
-    const user = await User.findOne({ phone });
-    if (!user || !user.otpHash || !user.otpExpiresAt) {
-      return res.status(400).json({ message: 'No OTP requested' });
-    }
-    if (user.otpExpiresAt.getTime() < Date.now()) {
-      return res.status(400).json({ message: 'OTP expired' });
+    // Find user
+    let user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
     }
 
-    const providedHash = hashOtp(otp, phone);
-    if (providedHash !== user.otpHash) {
-      return res.status(400).json({ message: 'Invalid OTP' });
+    // Verify the OTP
+    const verificationResult = await verifyOTP(phone, otp);
+    
+    if (!verificationResult.success || !verificationResult.verified) {
+      return res.status(400).json({ message: verificationResult.error || 'Invalid OTP' });
     }
 
+    // Mark phone as verified
     user.isPhoneVerified = true;
-    user.otpHash = undefined;
-    user.otpExpiresAt = undefined;
     await user.save();
 
     const token = jwt.sign({ uid: user._id, phone: user.phone, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
 
-    return res.status(200).json({ message: 'OTP verified', token, role: user.role });
+    return res.status(200).json({ 
+      message: 'Phone verified successfully', 
+      token, 
+      role: user.role 
+    });
   } catch (err) {
+    console.error('Verify OTP error:', err);
     return res.status(500).json({ message: 'Failed to verify OTP' });
   }
 }
@@ -81,6 +93,7 @@ async function setRole(req, res) {
 
     return res.status(200).json({ message: 'Role updated', role: user.role });
   } catch (err) {
+    console.error('Set role error:', err);
     return res.status(500).json({ message: 'Failed to set role' });
   }
 }
