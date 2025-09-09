@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/auth.routes');
+const profileRoutes = require('./routes/profileRoutes');
 
 const app = express();
 
@@ -21,6 +22,7 @@ const otpLimiter = rateLimit({ windowMs: 60 * 1000, max: 5 });
 app.use('/api/auth/request-otp', otpLimiter);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

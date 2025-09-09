@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-function generateOtp(length = 6) {
+function generateOtp(length = 4) {
   const min = 10 ** (length - 1);
   const max = 10 ** length - 1;
   const otp = Math.floor(min + Math.random() * (max - min + 1));
