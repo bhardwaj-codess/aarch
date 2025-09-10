@@ -35,13 +35,13 @@ async function sendOtpEmail(to, otp) {
   // Build the payload
   const msg = {
     to,
-    from: SENDER,
+    from: { name: 'AARC_STAGE', email:SENDER},
     subject: 'AARC STAGE OTP',
     text: `Your AARC verification code is  ${otp}`,
     html: `<p>Your AARC verification code is: <strong>${otp}</strong></p>
     It expires in 5 minutes — please do not share it with anyone.`,
 
-    // If you created a dynamic template in SendGrid (d-xxx) uncomment:
+    
     // templateId: TEMPLATE_ID,
     // dynamicTemplateData: { otp },
   };

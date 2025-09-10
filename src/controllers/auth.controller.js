@@ -7,53 +7,45 @@ const { generateOtp } = require('../utils/otp');
 
 const sessionStore = new Map();   
 
-// request OTP 
+
+// request-otp
 async function requestOtp(req, res) {
   try {
     const { email } = req.body;
 
-    
+   
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
-
-  
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
 
-
-    // const existing = await User.findOne({ email });
-    // if (existing) {
-    //   return res.status(409).json({ message: 'Email already registered' });
-    // }
+    
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({ email });   
+    }
+    
+    const otp = generateOtp();               
+    await sendOtpEmail(email, otp);        
 
     
-    const user = await User.create({ email });
-
-    // const otp = generateOtp();
-    // await sendOtpEmail(
-    //   email,
-    //   'AARC – Your verification code',
-    //   `Your OTP is ${otp}. It expires in 5 minutes.`
-    // );
-
-
-    const otp = generateOtp();
-    await sendOtpEmail(email, otp);   
-
-    sessionStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+    sessionStore.set(email, {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    });
 
     return res.status(200).json({
       success: true,
       message: 'OTP sent to your email',
       email,
-      devOtp: otp
+      devOtp: otp                      
     });
   } catch (err) {
     console.error('Request OTP error:', err);
-    return res.status(500).json({  success: false, message: 'Failed to request OTP' });
+    return res.status(500).json({ success: false, message: 'Failed to request OTP' });
   }
 }
 
@@ -87,7 +79,7 @@ async function verifyOtp(req, res) {
     const sessionData = sessionStore.get(email);
     if (!sessionData) {
       console.log('success false – OTP expired or not requested');
-      return res.status(400).json({ success: false, message: 'OTP expired or not requested' });
+      return res.status(400).json({ success: false, message: 'OTP expired' });
     }
 
     if (Date.now() > sessionData.expiresAt) {
@@ -126,7 +118,6 @@ async function verifyOtp(req, res) {
     return res.status(500).json({ success: false, message: 'Failed to verify OTP' });
   }
 }
-
 
 //Set role
   async function setRole(req, res) {
