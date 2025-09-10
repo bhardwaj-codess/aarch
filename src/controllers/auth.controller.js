@@ -34,18 +34,20 @@ async function requestOtp(req, res) {
     
     sessionStore.set(email, {
       otp,
-      expiresAt: Date.now() + 1 * 60 * 1000
+      expiresAt: Date.now() + 5 * 60 * 1000
     });
 
     return res.status(200).json({
-      success: true,
-      message: 'OTP sent to your email',
-      email,
-      devOtp: otp                      
+      status: true,
+       data: {
+        message: 'OTP sent to your email',
+        email,
+        devOtp: otp
+      }                      
     });
   } catch (err) {
     console.error('Request OTP error:', err);
-    return res.status(500).json({ success: false, message: 'Failed to request OTP' });
+    return res.status(500).json({ status: false, message: 'Failed to request OTP' });
   }
 }
 
@@ -75,18 +77,20 @@ async function resendOtp(req, res) {
 
     sessionStore.set(email, {
       otp,
-      expiresAt: Date.now() + 1 * 60 * 1000 // 1 min expiry
+      expiresAt: Date.now() + 5 * 60 * 1000 // 1 min expiry
     });
 
     return res.status(200).json({
-      success: true,
-      message: 'OTP resent to your email',
-      email,
-      devOtp: otp
+      status: true,
+       data: {
+        message: 'OTP sent to your email',
+        email,
+        devOtp: otp
+      }
     });
   } catch (err) {
     console.error('Resend OTP error:', err);
-    return res.status(500).json({ success: false, message: 'Failed to resend OTP' });
+    return res.status(500).json({ status: false, message: 'Failed to resend OTP' });
   }
 }
 
@@ -96,45 +100,45 @@ async function verifyOtp(req, res) {
     const { email, otp } = req.body;
 
     if (!email) {
-      console.log('success false – email required');
-      return res.status(400).json({ success: false, message: 'Email required' });
+      console.log('status false – email required');
+      return res.status(400).json({ status: false, message: 'Email required' });
     }
 
     if (!otp) {
-      console.log('success false – OTP required');
-      return res.status(400).json({ success: false, message: 'OTP required' });
+      console.log('status false – OTP required');
+      return res.status(400).json({ status: false, message: 'OTP required' });
     }
 
     // OTP must be exactly 4 digits
     if (!/^\d{4}$/.test(otp)) {
-      console.log('success false – enter 4-digit OTP');
-      return res.status(400).json({ success: false, message: 'Enter 4-digit OTP' });
+      console.log('status false – enter 4-digit OTP');
+      return res.status(400).json({ status: false, message: 'Enter 4-digit OTP' });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.log('success false – user not found');
-      return res.status(400).json({ success: false, message: 'User not found' });
+      console.log('status false – user not found');
+      return res.status(400).json({ status: false, message: 'User not found' });
     }
 
     const sessionData = sessionStore.get(email);
     if (!sessionData) {
-      console.log('success false – OTP expired or not requested');
-      return res.status(400).json({ success: false, message: 'OTP expired' });
+      console.log('status false – OTP expired or not requested');
+      return res.status(400).json({ status: false, message: 'OTP expired' });
     }
 
     if (Date.now() > sessionData.expiresAt) {
       sessionStore.delete(email);
-      console.log('success false – OTP expired');
-      return res.status(400).json({ success: false, message: 'OTP expired' });
+      console.log('status false – OTP expired');
+      return res.status(400).json({ status: false, message: 'OTP expired' });
     }
 
     if (sessionData.otp !== otp) {
-      console.log('success false – invalid OTP');
-      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+      console.log('status false – invalid OTP');
+      return res.status(400).json({ status: false, message: 'Invalid OTP' });
     }
 
-    // OTP verified successfully
+    // OTP verified statusfully
     sessionStore.delete(email);
 
     user.isEmailVerified = true;
@@ -146,17 +150,19 @@ async function verifyOtp(req, res) {
       { expiresIn: '7d' }
     );
 
-    console.log('success true – email verified');
+    console.log('status true – email verified');
     return res.status(200).json({
-      success: true,
-      message: 'Email verified successfully',
+      status: true,
+      data: {
+      message: 'Email verified statusfully',
       token,
       role: user.role
+      },
     });
   } catch (err) {
     console.error('Verify OTP error:', err);
-    console.log('success false – server error');
-    return res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+    console.log('status false – server error');
+    return res.status(500).json({ status: false, message: 'Failed to verify OTP' });
   }
 }
 
@@ -176,7 +182,7 @@ async function verifyOtp(req, res) {
       { new: true }
     );
 
-    return res.status(200).json({ message: 'Role updated', success:true, role: user.role });
+    return res.status(200).json({ message: 'Role updated', status:true, role: user.role });
   } catch (err) {
     console.error('Set role error:', err);
     return res.status(500).json({ message: 'Failed to set role' });
