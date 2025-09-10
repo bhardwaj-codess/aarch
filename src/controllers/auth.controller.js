@@ -34,7 +34,7 @@ async function requestOtp(req, res) {
     
     sessionStore.set(email, {
       otp,
-      expiresAt: Date.now() + 5 * 60 * 1000
+      expiresAt: Date.now() + 1 * 60 * 1000
     });
 
     return res.status(200).json({
@@ -46,6 +46,47 @@ async function requestOtp(req, res) {
   } catch (err) {
     console.error('Request OTP error:', err);
     return res.status(500).json({ success: false, message: 'Failed to request OTP' });
+  }
+}
+
+//resend otp
+async function resendOtp(req, res) {
+  try {
+    const { email } = req.body;
+
+    // --- same validation as requestOtp ---
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    // make sure the user exists (we already sent an OTP once)
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'No OTP request found for this email' });
+    }
+
+    // generate & store fresh OTP
+    const otp = generateOtp();
+    await sendOtpEmail(email, otp);
+
+    sessionStore.set(email, {
+      otp,
+      expiresAt: Date.now() + 1 * 60 * 1000 // 1 min expiry
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP resent to your email',
+      email,
+      devOtp: otp
+    });
+  } catch (err) {
+    console.error('Resend OTP error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to resend OTP' });
   }
 }
 
@@ -142,4 +183,4 @@ async function verifyOtp(req, res) {
   }
 }
 
-module.exports = { requestOtp, verifyOtp, setRole };
+module.exports = { requestOtp,resendOtp, verifyOtp, setRole };
