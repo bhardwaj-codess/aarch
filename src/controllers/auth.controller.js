@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { User, Roles } = require('../models/User');
-const sendEmail = require('../utils/sendEmail');        
-const { sendOtpSms } = require('../utils/sendOtp');  
+// const sendEmail = require('../utils/sendEmail');        
+const { sendOtpEmail } = require('../utils/sendOtp');  
 const { generateOtp } = require('../utils/otp');
 
 const sessionStore = new Map();   
@@ -32,12 +32,16 @@ async function requestOtp(req, res) {
     
     const user = await User.create({ email });
 
+    // const otp = generateOtp();
+    // await sendOtpEmail(
+    //   email,
+    //   'AARC – Your verification code',
+    //   `Your OTP is ${otp}. It expires in 5 minutes.`
+    // );
+
+
     const otp = generateOtp();
-    await sendOtpSms(
-      email,
-      'AARC – Your verification code',
-      `Your OTP is ${otp}. It expires in 5 minutes.`
-    );
+    await sendOtpEmail(email, otp);   
 
     sessionStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
