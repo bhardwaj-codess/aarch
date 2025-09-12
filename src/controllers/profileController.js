@@ -1,6 +1,6 @@
 const Profile = require('../models/Profile');
 
-
+// Update or create profile 
 async function UpdateProfile(req, res) {
   try {
     const userId = req.user && req.user.uid;
@@ -56,7 +56,6 @@ async function UpdateProfile(req, res) {
     return res.status(500).json({ success: false, message: 'Failed to save profile' });
   }
 }
-
 
 // Get own profile
 async function getMyProfile(req, res) {

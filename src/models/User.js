@@ -50,6 +50,7 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: Roles, default: 'user', },
     isPhoneVerified: { type: Boolean, default: false, },
     isEmailVerified: { type: Boolean, default: false, },
+    deleteRequestedAt: { type: Date },
   },
   { timestamps: true }
 );

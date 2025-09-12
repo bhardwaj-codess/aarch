@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { User, Roles } = require('../models/User');
-// const sendEmail = require('../utils/sendEmail');        
+const { User, Roles } = require('../models/User');     
 const { sendOtpEmail } = require('../utils/sendOtp');  
 const { generateOtp } = require('../utils/otp');
 
@@ -56,7 +55,7 @@ async function resendOtp(req, res) {
   try {
     const { email } = req.body;
 
-    // --- same validation as requestOtp ---
+    
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
@@ -65,19 +64,17 @@ async function resendOtp(req, res) {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
 
-    // make sure the user exists (we already sent an OTP once)
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'No OTP request found for this email' });
     }
 
-    // generate & store fresh OTP
     const otp = generateOtp();
     await sendOtpEmail(email, otp);
 
     sessionStore.set(email, {
       otp,
-      expiresAt: Date.now() + 5 * 60 * 1000 // 1 min expiry
+      expiresAt: Date.now() + 5 * 60 * 1000 
     });
 
     return res.status(200).json({
@@ -189,4 +186,30 @@ async function verifyOtp(req, res) {
   }
 }
 
-module.exports = { requestOtp,resendOtp, verifyOtp, setRole };
+// Assumes you have auth middleware setting req.user
+async function deleteAccount(req, res) {
+  try {
+    const userId = req.user.uid;          // <-- match token payload
+    const user = await User.findById(userId);
+
+    if (!user) return res.status(404).json({ status: false, message: "User not found" });
+
+    if (user.deleteRequestedAt)
+      return res.status(400).json({ status: false, message: "Deletion already requested" });
+
+    user.deleteRequestedAt = new Date();
+    await user.save();
+
+    return res.status(200).json({
+      status: true,
+      data : {message: "Account deletion requested. Your data will be removed after 30 days."}
+    });
+
+  } catch (err) {
+    console.error("Delete account error:", err);
+    return res.status(500).json({ status: false, message: "Failed to delete account" });
+  }
+}
+
+
+module.exports = { requestOtp,resendOtp, verifyOtp, setRole, deleteAccount };
