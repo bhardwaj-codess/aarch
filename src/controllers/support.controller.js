@@ -1,7 +1,7 @@
 const SupportTicket = require('../models/SupportTicket');
 // const SupportReply  = require('../models/SupportReply'); 
 
-/* ---------------- create ticket ---------------- */
+// create ticket 
 exports.createTicket = async (req, res) => {
   try {
     const { issueFaced = 'other', subject, description } = req.body;
@@ -24,7 +24,7 @@ exports.createTicket = async (req, res) => {
   }
 };
 
-/* ---------------- list my tickets ---------------- */
+// list my tickets 
 exports.getMyTickets = async (req, res) => {
   try {
     const page  = +req.query.page  || 1;
@@ -50,7 +50,7 @@ exports.getMyTickets = async (req, res) => {
   }
 };
 
-/* ---------------- single ticket ---------------- */
+// single ticket
 exports.getTicketById = async (req, res) => {
   try {
     const ticket = await SupportTicket.findOne({
@@ -72,7 +72,7 @@ exports.getTicketById = async (req, res) => {
   }
 };
 
-/* ---------------- user reply ---------------- */
+// user reply
 exports.addReply = async (req, res) => {
   try {
     const { message } = req.body;
@@ -98,7 +98,7 @@ exports.addReply = async (req, res) => {
   }
 };
 
-
+// user delete ticket
 exports.deleteTicket = async (req, res) => {
   try {
     const ticket = await SupportTicket.findOne({

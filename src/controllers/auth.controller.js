@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { User, Roles } = require('../models/User');     
+const Profile = require('../models/Profile');
+const Feedback = require('../models/Feedback');
+const SupportTicket = require('../models/SupportTicket');
+// const SupportReply = require('../models/SupportReply');  
 const { sendOtpEmail } = require('../utils/sendOtp');  
 const { generateOtp } = require('../utils/otp');
 
@@ -186,16 +190,28 @@ async function verifyOtp(req, res) {
   }
 }
 
-// Assumes you have auth middleware setting req.user
+// Delete account 
 async function deleteAccount(req, res) {
   try {
-    const userId = req.user.uid;          // <-- match token payload
+    const userId = req.user.uid;          
     const user = await User.findById(userId);
 
     if (!user) return res.status(404).json({ status: false, message: "User not found" });
 
     if (user.deleteRequestedAt)
       return res.status(400).json({ status: false, message: "Deletion already requested" });
+
+
+
+      await Promise.all([
+      Profile.deleteMany({ userId }),          
+      SupportTicket.deleteMany({ userId }),    
+      // Feedback.deleteMany({ userId }),         
+      // SupportReply.deleteMany({ userId }),  
+      // Event.deleteMany({ ownerId: userId }),
+      // Message.deleteMany({ senderId: userId }),
+      // etc.
+    ]);
 
     user.deleteRequestedAt = new Date();
     await user.save();

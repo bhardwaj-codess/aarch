@@ -9,6 +9,7 @@
   const authRoutes = require('./routes/auth.routes');
   const profileRoutes = require('./routes/profileRoutes');
   const supportRoutes = require('./routes/support.routes');
+  const feedbackRoutes = require('./routes/feedback.routes');
 
   const app = express();
 
@@ -26,6 +27,7 @@
   app.use('/api/auth', authRoutes);
   app.use('/api/profile', profileRoutes);
   app.use('/api/support', supportRoutes);
+  app.use('/api/feedback', feedbackRoutes);
 
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
