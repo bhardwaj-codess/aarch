@@ -14,7 +14,7 @@ const ticketSchema = new Schema(
     subject:       { type: String, required: true, trim: true, maxlength: 120 },
     description:   { type: String, required: true, trim: true, maxlength: 2000 },
 
-    status:        { type: String, enum: ['open', 'in-progress', 'closed'], default: 'open' },
+    status:        { type: String, enum: ['Pending..', 'Reverted', 'closed'], default: 'Pending' },
     priority:      { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
     adminNotes:    { type: String, default: '' },
     closedAt:      Date

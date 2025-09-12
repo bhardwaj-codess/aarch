@@ -17,7 +17,7 @@ exports.createTicket = async (req, res) => {
       description
     });
 
-    return res.status(201).json({ status: true, data: ticket });
+    return res.status(201).json({ status: true, message: 'Ticket created successfully',  data: ticket });
   } catch (err) {
     console.error('Create ticket error:', err);
     return res.status(500).json({ status: false, message: 'Failed to create ticket' });
@@ -42,6 +42,7 @@ exports.getMyTickets = async (req, res) => {
 
     return res.json({ 
       status: true, 
+      message: 'Tickets fetched successfully',
       data: { tickets, total, page, pages: Math.ceil(total / limit) } 
     });
   } catch (err) {
@@ -65,7 +66,7 @@ exports.getTicketById = async (req, res) => {
     //                                   .sort({ createdAt: 1 })
     //                                   .lean();
 
-    return res.json({ status: true, data: { ticket /*, replies */ } });
+    return res.json({ status: true, message: 'Ticket fetched successfully',  data: { ticket /*, replies */ } });
   } catch (err) {
     console.error('Get ticket error:', err);
     return res.status(500).json({ status: false, message: 'Failed to fetch ticket' });
