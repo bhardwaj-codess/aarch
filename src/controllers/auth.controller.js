@@ -270,14 +270,3 @@ module.exports = {
   getAllArtists: getUsersByRole('artist'),
   getAllOrganizers: getUsersByRole('organizer'),
 };
-
-
-
-// exports.getAllArtists     = getUsersByRole('artist');
-// exports.getAllOrganisers  = getUsersByRole('organiser');
-
-
-// module.exports = { requestOtp,resendOtp, verifyOtp, setRole, deleteAccount };
-
-
-

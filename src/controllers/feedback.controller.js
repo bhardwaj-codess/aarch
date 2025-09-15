@@ -4,17 +4,20 @@ exports.submitFeedback = async (req, res) => {
   try {
     const { rating, comment = '' } = req.body;
 
-    if (rating === undefined || rating < 0 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 0 and 5' });
+
+     if (rating === undefined || rating === null) {
+      return res.status(400).json({ message: 'Rating required' });
     }
-    if (!Number.isFinite(rating) || (rating * 2) % 1 !== 0) { // 0.5 step
-      return res.status(400).json({ message: 'Rating must be in 0.5 steps (e.g. 3.5)' });
+
+    
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be an integer between 1 and 5' });
     }
 
     const feedback = await Feedback.findOneAndUpdate(
-      { userId: req.user.uid },               
-      { rating, comment },                    
-      { new: true, upsert: true }             
+      { userId: req.user.uid },
+      { rating, comment },
+      { new: true, upsert: true }
     );
 
     return res.status(200).json({
