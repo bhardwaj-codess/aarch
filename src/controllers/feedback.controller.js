@@ -4,7 +4,6 @@ exports.submitFeedback = async (req, res) => {
   try {
     const { rating, comment = '' } = req.body;
 
-    // validate rating
     if (rating === undefined || rating < 0 || rating > 5) {
       return res.status(400).json({ message: 'Rating must be between 0 and 5' });
     }
