@@ -1,5 +1,7 @@
 // controller/chat.controller.js
 const User = require('../models/User');
+const Conversation = require('../models/Conversation');
+const Message = require('../models/Message');
 
 
 exports.getRoleList = (role) => async (req, res) => {
@@ -15,3 +17,9 @@ exports.getRoleList = (role) => async (req, res) => {
   ]);
   res.json({ status: true, data: { users, total, page } });
 };
+
+
+
+exports.getUsers    = exports.getRoleList('user');
+exports.getArtists  = exports.getRoleList('artist');
+exports.getOrganizers = exports.getRoleList('organizer');
