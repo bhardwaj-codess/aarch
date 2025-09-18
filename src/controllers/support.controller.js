@@ -104,7 +104,7 @@ exports.deleteTicket = async (req, res) => {
   try {
     const ticket = await SupportTicket.findOne({
       _id: req.params.id,
-      userId: req.user.uid           // only open tickets can be self-deleted
+      userId: req.user.uid           
     });
 
     if (!ticket) {
