@@ -168,7 +168,7 @@ async function verifyOtp(req, res) {
 }
 
 //Set role
-  async function setRole(req, res) {
+async function setRole(req, res) {
   try {
     const { role } = req.body;
     const userId = req.user && req.user.uid;
