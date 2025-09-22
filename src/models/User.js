@@ -9,6 +9,11 @@ const userSchema = new mongoose.Schema(
     isPhoneVerified: { type: Boolean, default: false, },
     isEmailVerified: { type: Boolean, default: false, },
     deleteRequestedAt: { type: Date },
+
+
+    login_source: { type: String, default: "" },       // google, facebook, apple
+    social_auth: { type: String, default: "" },        // social uid
+    os_type: { type: String, default: "" }  
     
   },
   { timestamps: true }

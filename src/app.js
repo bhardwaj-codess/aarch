@@ -10,6 +10,7 @@
   const profileRoutes = require('./routes/profileRoutes');
   const supportRoutes = require('./routes/support.routes');
   const feedbackRoutes = require('./routes/feedback.routes');
+  const socialRoutes = require('./routes/social.routes');
 
   const app = express();
 
@@ -28,6 +29,7 @@
   app.use('/api/profile', profileRoutes);
   app.use('/api/support', supportRoutes);
   app.use('/api/feedback', feedbackRoutes);
+  app.use('/api/social', socialRoutes);
 
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
