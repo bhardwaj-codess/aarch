@@ -140,7 +140,10 @@ async function verifyOtp(req, res) {
     }
 
     // OTP verified statusfully
-    sessionStore.delete(email);
+    // sessionStore.delete(email);
+    // const exist_user = Date.now() - user.createdAt.getTime() > 10_000;
+
+    const exist_user = user.isEmailVerified; 
 
     user.isEmailVerified = true;
     await user.save();
@@ -157,7 +160,9 @@ async function verifyOtp(req, res) {
       data: {
       message: 'Email verified statusfully',
       token,
-      role: user.role
+      role: user.role,
+      exist_user,
+      id: user._id 
       },
     });
   } catch (err) {

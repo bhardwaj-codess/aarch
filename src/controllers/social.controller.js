@@ -76,6 +76,7 @@ async function socialLogin(req, res) {
     }
 
     let user = await User.findOne({ email });
+      const exist_user  = Boolean(user); 
 
     if (!user) {
       user = await User.create({
@@ -109,7 +110,7 @@ async function socialLogin(req, res) {
         name: user.name,
         username: user.username || "",
         token,
-        refresh_token: token,   // optional: generate separate refresh token if needed
+        exist_user,
       },
     });
   } catch (err) {
