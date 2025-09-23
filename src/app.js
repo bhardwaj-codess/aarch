@@ -11,6 +11,7 @@
   const supportRoutes = require('./routes/support.routes');
   const feedbackRoutes = require('./routes/feedback.routes');
   const socialRoutes = require('./routes/social.routes');
+  const chatRoutes = require('./routes/chat.routes');
 
   const app = express();
 
@@ -30,6 +31,7 @@
   app.use('/api/support', supportRoutes);
   app.use('/api/feedback', feedbackRoutes);
   app.use('/api/social', socialRoutes);
+  app.use('/api/chat', chatRoutes);
 
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });

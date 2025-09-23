@@ -261,12 +261,24 @@ const getUsersByRole = (role) => async (req, res) => {
 };
 
 
+const getAllProfiles = async (req, res) => {
+  try {
+    const profiles = await Profile.find().lean();
+    res.json({ status: true, data: profiles });
+  } catch (err) {
+    console.error("Get all profiles error:", err);
+    res.status(500).json({ status: false, message: "Server error" });
+  }
+};
+
+
 module.exports = {
   requestOtp,
   resendOtp,
   verifyOtp,
   setRole,
   deleteAccount,
+  getAllProfiles,
   getAllArtists: getUsersByRole('artist'),
   getAllOrganizers: getUsersByRole('organizer'),
 };

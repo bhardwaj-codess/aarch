@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { requestOtp, resendOtp, verifyOtp, setRole, deleteAccount, getAllArtists, getAllOrganizers } = require('../controllers/auth.controller');
+const { requestOtp, resendOtp, verifyOtp, setRole, deleteAccount,getAllProfiles, getAllArtists, getAllOrganizers } = require('../controllers/auth.controller');
 const authMiddleware = require('../middlewares/auth');
 
 const router = Router();
@@ -12,6 +12,7 @@ router.delete('/delete-account', authMiddleware, deleteAccount);
 
 router.get('/artists',  getAllArtists);
 router.get('/organizers', getAllOrganizers);
+router.get('/profiles', getAllProfiles);
 
 
 module.exports = router;
