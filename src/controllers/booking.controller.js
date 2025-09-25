@@ -1,5 +1,5 @@
 const Booking = require('../models/booking');
-const Artist  = require('../models/artist');
+// const Artist  = require('../models/artist');
 const Organizer = require('../models/organizer');
 
 /* ----------------------------------------------------------

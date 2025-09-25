@@ -1,6 +1,6 @@
-const Artist = require('../models/artist');
+const Artist = require('../models/Artist');
 const mongoose  = require('mongoose');
-const User = require('../models/User').User;
+const { User } = require('../models/User');
 
 // creatreArtist Profile
 exports.createArtist = async (req, res) => {
