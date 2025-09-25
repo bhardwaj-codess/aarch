@@ -1,4 +1,4 @@
-const Organizer = require('../models/organizer');
+const Organizer = require('../models/Organizer');
 const mongoose  = require('mongoose');
 
 // creatreOrganizer Profile
