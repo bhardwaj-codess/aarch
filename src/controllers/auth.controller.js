@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { User, Roles } = require('../models/User');     
-const Profile = require('../models/Profile');
 const Feedback = require('../models/Feedback');
 const SupportTicket = require('../models/SupportTicket');
 // const SupportReply = require('../models/SupportReply');  
@@ -233,49 +232,6 @@ async function deleteAccount(req, res) {
 }
 
 
-// common handler for artists and organizers
-const getUsersByRole = (role) => async (req, res) => {
-  try {
-    const page  = Math.max(parseInt(req.query.page)  || 1, 1);
-    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
-    const skip  = (page - 1) * limit;
-
-    const [users, total] = await Promise.all([
-      User.find({ role })
-          .select('name email avatar bio city country createdAt') // only public fields
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-      User.countDocuments({ role })
-    ]);
-
-    return res.json({
-      status: true,
-      data: {
-        users,
-        total,
-        page,
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (err) {
-    console.error(`Get ${role} error:`, err);
-    return res.status(500).json({ status: false, message: 'Server error' });
-  }
-};
-
-
-const getAllProfiles = async (req, res) => {
-  try {
-    const profiles = await Profile.find().lean();
-    res.json({ status: true, data: profiles });
-  } catch (err) {
-    console.error("Get all profiles error:", err);
-    res.status(500).json({ status: false, message: "Server error" });
-  }
-};
-
 
 module.exports = {
   requestOtp,
@@ -283,7 +239,4 @@ module.exports = {
   verifyOtp,
   setRole,
   deleteAccount,
-  getAllProfiles,
-  getAllArtists: getUsersByRole('artist'),
-  getAllOrganizers: getUsersByRole('organizer'),
 };
