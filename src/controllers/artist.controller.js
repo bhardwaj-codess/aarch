@@ -5,33 +5,87 @@ const { User } = require('../models/User');
 // creatreArtist Profile
 exports.createArtist = async (req, res) => {
   try {
-    // if (req.user.role !== 'artist') {
-    //   return res.status(403).json({ status: false, message: 'Only artist role can create artist profile' });
-    // }
+
+    // console.log('req.file:', req.file);   
+    // console.log('req.body:', req.body); 
 
     const userId = req.user.uid;
-    const exists = await Artist.exists({ userId });
-    if (exists) return res.status(409).json({ status: false, message: 'Artist profile already exists' });
 
-    const artist = await Artist.create({ ...req.body, userId });
-    res.status(201).json({ status: true, data: artist });
-  } catch (e) {
-    res.status(400).json({ status: false, message: e.message });
+    const exists = await Artist.exists({ userId });
+    if (exists) 
+      return res.status(409).json({ status: false, message: 'Artist profile already exists' });
+
+    let imageUrl = '';
+    if (req.file) {
+      imageUrl = req.file.path || req.file.location || req.file.secure_url || '';
+      if (!imageUrl && req.file.filename) {
+        const path = require('path');
+        imageUrl = path.join(process.cwd(), 'uploads', req.file.filename);
+      }
+    }
+
+    const artist = await Artist.create({
+      ...req.body,
+      userId,
+      image: imageUrl
+    });
+
+    return res.status(201).json({ status: true, data: artist });
+  } catch (error) {
+    console.error('ERROR:', error);              
+      return res.status(500).json({   
+      status: false,
+      message: error.message || error.toString(),
+      stack: error.stack
+    });
   }
 };
 
 // updateArtist Profile
 exports.updateArtist = async (req, res) => {
   try {
-    const artist = await Artist.findOneAndUpdate(
-      { userId: req.user.uid },
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!artist) return res.status(404).json({ message: 'Artist profile not found' });
-    res.json({ status: true, data: artist });
-  } catch (e) {
-    res.status(400).json({ status: false, message: e.message });
+    // console.log('updateArtist req.file:', req.file);
+    // console.log('updateArtist req.body:', req.body);
+
+    const userId = req.user.uid;
+
+    // Ensure artist exists
+    const existing = await Artist.findOne({ userId });
+    if (!existing) return res.status(404).json({ status: false, message: 'Artist profile not found' });
+
+    // Build update payload
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.image = req.file.path || req.file.location || req.file.secure_url || '';
+      if (!updateData.image && req.file.filename) {
+        const path = require('path');
+        updateData.image = path.join(process.cwd(), 'uploads', req.file.filename);
+      }
+    }
+
+    // Update document
+    const artist = await Artist.findOneAndUpdate({ userId }, updateData, { new: true, runValidators: true });
+
+    try {
+      if (req.file && req.file.path && existing.image) {
+        const path = require('path');
+        const fs = require('fs');
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        if (existing.image.startsWith(uploadsDir)) {
+          fs.unlink(existing.image, (err) => {
+            if (err) console.warn('Failed to delete old image:', err.message);
+            else console.log('Deleted old image:', existing.image);
+          });
+        }
+      }
+    } catch (cleanupErr) {
+      console.warn('Error during image cleanup:', cleanupErr && cleanupErr.message ? cleanupErr.message : cleanupErr);
+    }
+
+    return res.json({ status: true, data: artist });
+  } catch (error) {
+    console.error('ERROR updateArtist:', error);
+    return res.status(500).json({ status: false, message: error.message || error.toString(), stack: error.stack });
   }
 };
 
@@ -52,7 +106,7 @@ exports.getArtistById = async (req, res) => {
   res.json({ status: true, data: artist });
 };
 
-// List artists with pagination
+// List artists 
 exports.listArtists = async (req, res) => {
   try {
     const page  = Math.max(parseInt(req.query.page)  || 1, 1);

@@ -19,7 +19,8 @@ const artistSchema = new mongoose.Schema(
       instagram: String,
       spotify:   String,
       youtube:   String
-    }
+    },
+    image: { type: String, trim: true } 
   },
   { timestamps: true }
 );

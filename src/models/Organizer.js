@@ -13,7 +13,8 @@ const organizerSchema = new mongoose.Schema(
       facebook:  String,
       twitter:   String,
       linkedin:  String
-    }
+    },
+    image: { type: String, trim: true } 
   },
   { timestamps: true }
 );

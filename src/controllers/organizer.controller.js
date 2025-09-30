@@ -1,5 +1,7 @@
 const Organizer = require('../models/Organizer');
 const mongoose  = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 
 // creatreOrganizer Profile
 exports.createOrganizer = async (req, res) => {
@@ -11,7 +13,15 @@ exports.createOrganizer = async (req, res) => {
     if (await Organizer.exists({ userId }))
       return res.status(409).json({ status: false, message: 'Profile already exists' });
 
-    const doc = await Organizer.create({ ...req.body, userId });
+    let imageUrl = '';
+    if (req.file) {
+      imageUrl = req.file.path || req.file.location || req.file.secure_url || '';
+      if (!imageUrl && req.file.filename) {
+        imageUrl = path.join(process.cwd(), 'uploads', req.file.filename);
+      }
+    }
+
+    const doc = await Organizer.create({ ...req.body, userId, image: imageUrl });
     res.status(201).json({ status: true, data: doc });
   } catch (e) {
     res.status(400).json({ status: false, message: e.message });
@@ -21,12 +31,38 @@ exports.createOrganizer = async (req, res) => {
 // editOrganizer Profile
 exports.updateOrganizer = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.image = req.file.path || req.file.location || req.file.secure_url || '';
+      if (!updateData.image && req.file.filename) {
+        updateData.image = path.join(process.cwd(), 'uploads', req.file.filename);
+      }
+    }
+
+    const existing = await Organizer.findOne({ userId: req.user.uid });
+
     const doc = await Organizer.findOneAndUpdate(
       { userId: req.user.uid },
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
     if (!doc) return res.status(404).json({ status: false, message: 'Profile not found' });
+
+    // cleanup old local image if replaced
+    try {
+      if (req.file && req.file.path && existing && existing.image) {
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        if (existing.image.startsWith(uploadsDir)) {
+          fs.unlink(existing.image, (err) => {
+            if (err) console.warn('Failed to delete old organizer image:', err.message);
+            else console.log('Deleted old organizer image:', existing.image);
+          });
+        }
+      }
+    } catch (cleanupErr) {
+      console.warn('Error during organizer image cleanup:', cleanupErr && cleanupErr.message ? cleanupErr.message : cleanupErr);
+    }
+
     res.json({ status: true, data: doc });
   } catch (e) {
     res.status(400).json({ status: false, message: e.message });
@@ -50,7 +86,7 @@ exports.getOrganizerById = async (req, res) => {
   res.json({ status: true, data: doc });
 };
 
-
+//get all organizer
 exports.listOrganizers = async (req, res) => {
   try {
     const page  = Math.max(parseInt(req.query.page)  || 1, 1);

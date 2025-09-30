@@ -40,6 +40,17 @@
   });
   require('./jobs/deleteUsers'); 
 
+  // Global error handler - makes middleware errors (like multer/cloudinary) return JSON
+  // Must be defined after all routes/middlewares
+  app.use((err, req, res, next) => {
+    console.error('Global error handler caught:', err && err.stack ? err.stack : err);
+    // If headers already sent, delegate to default handler
+    if (res.headersSent) return next(err);
+
+    const status = err && err.statusCode ? err.statusCode : 500;
+    res.status(status).json({ status: false, message: err.message || 'Server error' });
+  });
+
   module.exports = app;
 
 

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { User, Roles } = require('../models/User');     
 const Feedback = require('../models/Feedback');
+const Artist = require('../models/Artist');
 const SupportTicket = require('../models/SupportTicket');
 // const SupportReply = require('../models/SupportReply');  
 const { sendOtpEmail } = require('../utils/sendOtp');  
@@ -9,49 +10,48 @@ const { generateOtp } = require('../utils/otp');
 
 const sessionStore = new Map();   
 
-
 // request-otp
-async function requestOtp(req, res) {
-  try {
-    const { email } = req.body;
-
-   
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: 'Please provide a valid email address' });
-    }
+  async function requestOtp(req, res) {
+    try {
+      const { email } = req.body;
 
     
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = await User.create({ email });   
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Please provide a valid email address' });
+      }
+
+      
+      let user = await User.findOne({ email });
+      if (!user) {
+        user = await User.create({ email });   
+      }
+      
+      const otp = generateOtp();               
+      await sendOtpEmail(email, otp);        
+
+      
+      sessionStore.set(email, {
+        otp,
+        expiresAt: Date.now() + 5 * 60 * 1000
+      });
+
+      return res.status(200).json({
+        status: true,
+        data: {
+          message: 'OTP sent to your email',
+          email,
+          devOtp: otp
+        }                      
+      });
+    } catch (err) {
+      console.error('Request OTP error:', err);
+      return res.status(500).json({ status: false, message: 'Failed to request OTP' });
     }
-    
-    const otp = generateOtp();               
-    await sendOtpEmail(email, otp);        
-
-    
-    sessionStore.set(email, {
-      otp,
-      expiresAt: Date.now() + 5 * 60 * 1000
-    });
-
-    return res.status(200).json({
-      status: true,
-       data: {
-        message: 'OTP sent to your email',
-        email,
-        devOtp: otp
-      }                      
-    });
-  } catch (err) {
-    console.error('Request OTP error:', err);
-    return res.status(500).json({ status: false, message: 'Failed to request OTP' });
   }
-}
 
 //resend otp
 async function resendOtp(req, res) {
@@ -195,6 +195,40 @@ async function setRole(req, res) {
 }
 
 // Delete account 
+// async function deleteAccount(req, res) {
+//   try {
+//     const userId = req.user.uid;          
+//     const user = await User.findById(userId);
+
+//     if (!user) return res.status(404).json({ status: false, message: "User not found" });
+
+//     if (user.deleteRequestedAt)
+//       return res.status(400).json({ status: false, message: "Deletion already requested" });
+
+    
+//       await Promise.all([
+//       Artist.deleteMany({ userId }),          
+//       SupportTicket.deleteMany({ userId }),    
+//       // Feedback.deleteMany({ userId }),         
+//       // SupportReply.deleteMany({ userId }),  
+//       // Event.deleteMany({ ownerId: userId }),
+//       // Message.deleteMany({ senderId: userId }),
+//       // etc.
+//     ]);
+
+//     user.deleteRequestedAt = new Date();
+//     await user.save();
+
+//     return res.status(200).json({
+//       status: true,
+//       data : {message: "Account deletion requested. Your data will be removed after 30 days."}
+//     });
+
+//   } catch (err) {
+//     console.error("Delete account error:", err);
+//     return res.status(500).json({ status: false, message: "Failed to delete account" });
+//   }
+// }
 async function deleteAccount(req, res) {
   try {
     const userId = req.user.uid;          
@@ -205,24 +239,13 @@ async function deleteAccount(req, res) {
     if (user.deleteRequestedAt)
       return res.status(400).json({ status: false, message: "Deletion already requested" });
 
-
-
-      await Promise.all([
-      Profile.deleteMany({ userId }),          
-      SupportTicket.deleteMany({ userId }),    
-      // Feedback.deleteMany({ userId }),         
-      // SupportReply.deleteMany({ userId }),  
-      // Event.deleteMany({ ownerId: userId }),
-      // Message.deleteMany({ senderId: userId }),
-      // etc.
-    ]);
-
+    // Just mark timestamp
     user.deleteRequestedAt = new Date();
     await user.save();
 
     return res.status(200).json({
       status: true,
-      data : {message: "Account deletion requested. Your data will be removed after 30 days."}
+      data: { message: "Account deletion requested. Your data will be removed after 2 minutes." }
     });
 
   } catch (err) {
