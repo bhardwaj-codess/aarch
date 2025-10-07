@@ -1,4 +1,4 @@
-const organizer = ('../models/Organizer')
+const Organizer = require('../models/Organizer');
 const mongoose  = require('mongoose');
 const path = require('path');
 const fs = require('fs');
