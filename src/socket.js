@@ -1,4 +1,4 @@
-// socket.js  (ultra-verbose)
+// socket.js
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Message = require('./models/Message');

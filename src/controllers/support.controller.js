@@ -1,5 +1,4 @@
 const SupportTicket = require('../models/SupportTicket');
-// const SupportReply  = require('../models/SupportReply'); 
 
 // create ticket 
 exports.createTicket = async (req, res) => {

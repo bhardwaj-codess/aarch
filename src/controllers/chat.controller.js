@@ -30,9 +30,7 @@ exports.getUsers      = exports.getRoleList('user');
 exports.getArtists    = exports.getRoleList('artist');
 exports.getOrganizers = exports.getRoleList('organizer');
 
-/**
- * Get conversation + messages between two users
- */
+// Get or create conversation between two users
 exports.getConversation = async (req, res) => {
   try {
     const userId1 = req.user.uid;           // logged-in user
@@ -65,9 +63,7 @@ exports.getConversation = async (req, res) => {
   }
 };
 
-/**
- * Optional: send a message via REST (useful fallback if Socket.io not used)
- */
+// Send a message in a conversation 
 exports.sendMessage = async (req, res) => {
   try {
     const senderId = req.user.uid;

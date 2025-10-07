@@ -1,21 +1,20 @@
-// models/artist.js
 const mongoose = require('mongoose');
 
 const artistSchema = new mongoose.Schema(
   {
     userId:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, required: true },
-    name:         { type: String, required: true, trim: true },        // Artist's full name
-    mobileNumber: { type: String, required: true, trim: true },        // Mobile number
-    stageName:    { type: String, required: true, trim: true },        // Stage name
-    description:  { type: String, max: 1000 },                         // Artist description / bio
-    category:     { type: String, required: true, trim: true },        // Music category / genre
-    price:        { type: Number, required: true },                     // Price / rate
+    name:         { type: String, required: true, trim: true },        
+    mobileNumber: { type: String, required: true, trim: true },        
+    stageName:    { type: String, required: true, trim: true },        
+    description:  { type: String, max: 1000 },                         
+    category:     { type: String, required: true, trim: true },        
+    price:        { type: Number, required: true },                     
     gender:       { 
       type: String, 
       enum: ['male', 'female', 'other'], 
       required: true 
     },
-    socials:      {                                                   
+    socials: {                                                   
       instagram: String,
       spotify:   String,
       youtube:   String
@@ -25,4 +24,6 @@ const artistSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Artist', artistSchema);
+const Artist = mongoose.models.Artist || mongoose.model('Artist', artistSchema);
+
+module.exports = Artist;

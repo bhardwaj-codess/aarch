@@ -1,11 +1,12 @@
 const Artist = require('../models/Artist');
+const cloudinary = require('../config/cloudinary');
+const path = require('path');
 const mongoose  = require('mongoose');
 const { User } = require('../models/User');
 
 // creatreArtist Profile
 exports.createArtist = async (req, res) => {
   try {
-
     // console.log('req.file:', req.file);   
     // console.log('req.body:', req.body); 
 
@@ -16,24 +17,38 @@ exports.createArtist = async (req, res) => {
       return res.status(409).json({ status: false, message: 'Artist profile already exists' });
 
     let imageUrl = '';
+
     if (req.file) {
-      imageUrl = req.file.path || req.file.location || req.file.secure_url || '';
-      if (!imageUrl && req.file.filename) {
-        const path = require('path');
-        imageUrl = path.join(process.cwd(), 'uploads', req.file.filename);
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'artists',
+          public_id: req.body.stageName.replace(/\s+/g, '_').toLowerCase(),
+          overwrite: true,
+          unique_filename: false, 
+          resource_type: 'image',
+          tags: [`user_${userId}`, `artist_${req.body.stageName}`],
+          context: `userId=${userId}|stageName=${req.body.stageName}`
+        });
+
+        imageUrl = result.secure_url;
+
+      } catch (cloudErr) {
+        console.warn('Cloudinary upload failed, falling back to local storage:', cloudErr.message);
+        imageUrl = req.file.path || path.join(process.cwd(), 'uploads', req.file.filename);
       }
     }
 
     const artist = await Artist.create({
-      ...req.body,
-      userId,
+      ...req.body,   
+      userId,        
       image: imageUrl
     });
 
     return res.status(201).json({ status: true, data: artist });
+
   } catch (error) {
     console.error('ERROR:', error);              
-      return res.status(500).json({   
+    return res.status(500).json({   
       status: false,
       message: error.message || error.toString(),
       stack: error.stack

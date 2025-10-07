@@ -5,7 +5,7 @@
   const cookieParser = require('cookie-parser');
   const rateLimit = require('express-rate-limit');
 
-
+// Import routes
   const authRoutes = require('./routes/auth.routes');
   const supportRoutes = require('./routes/support.routes');
   const feedbackRoutes = require('./routes/feedback.routes');
@@ -13,10 +13,14 @@
   const chatRoutes = require('./routes/chat.routes');
   const artistRoutes = require('./routes/artist.routes');
   const organizerRoutes = require('./routes/organizer.routes');
+  const appUserRoutes = require('./routes/appUser.routes');
 
   const app = express();
 
+// Trust reverse proxies
   app.set('trust proxy', 1);
+
+  // Middleware
   app.use(helmet());
   app.use(cors({ origin: '*', credentials: true }));
   app.use(express.json());
@@ -34,23 +38,25 @@
   app.use('/api/chat', chatRoutes);
   app.use('/api/artist', artistRoutes);
   app.use('/api/organizer', organizerRoutes);
+  app.use('/api/appuser', appUserRoutes);
 
+  // Health check endpoint
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
   });
+
+// Load background jobs
   require('./jobs/deleteUsers'); 
 
-  // Global error handler - makes middleware errors (like multer/cloudinary) return JSON
-  // Must be defined after all routes/middlewares
+
   app.use((err, req, res, next) => {
     console.error('Global error handler caught:', err && err.stack ? err.stack : err);
-    // If headers already sent, delegate to default handler
     if (res.headersSent) return next(err);
 
     const status = err && err.statusCode ? err.statusCode : 500;
     res.status(status).json({ status: false, message: err.message || 'Server error' });
   });
 
-  module.exports = app;
+module.exports = app;
 
 

@@ -8,7 +8,7 @@ const conversationSchema = new Schema({
     sender: { type: Types.ObjectId, ref: 'User' },
     createdAt: Date
   }
-}, { timestamps: true });   // gives createdAt + updatedAt automatically
+}, { timestamps: true });   
 
-conversationSchema.index({ participants: 1 }, { unique: true }); // 1 conv per pair
+conversationSchema.index({ participants: 1 }, { unique: true }); 
 module.exports = model('Conversation', conversationSchema);

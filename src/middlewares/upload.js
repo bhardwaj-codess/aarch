@@ -1,13 +1,6 @@
 const multer = require('multer');
 
-/**
- * Export a factory that returns a multer middleware configured
- * to store uploaded files in the requested Cloudinary folder.
- * Falls back to a local subfolder under ./uploads/<folder> when
- * Cloudinary isn't configured.
- *
- * Usage: const parser = require('../middlewares/upload')('artists');
- */
+
 module.exports = function parserFor(folder = 'artists') {
   try {
     const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -21,7 +14,7 @@ module.exports = function parserFor(folder = 'artists') {
       cloudinary: cloudinary,
       params: {
         folder: folder,
-        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],  //Webp is for testing
       },
     });
 

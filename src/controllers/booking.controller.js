@@ -1,21 +1,12 @@
 const Booking = require('../models/booking');
-// const Artist  = require('../models/artist');
+const Artist  = require('../models/Artist');
 const Organizer = require('../models/organizer');
 
-/* ----------------------------------------------------------
-   helper: convert role string → mongoose model
----------------------------------------------------------- */
+
 const roleModel = (role) =>
   role === 'artist' ? Artist : role === 'organizer' ? Organizer : null;
 
-/* ===============================5.  -===========================
-   POST /bookings   (everyone can book)
-   body: {
-     targetType: "artist" | "organizer",
-     targetId:   ObjectId (artist _id or organizer _id),
-     eventType, eventDate, location, price, description, ...
-   }
-   ========================================================== */
+//Create Booking 
 exports.createBooking = async (req, res) => {
   try {
     const { targetType, targetId, eventType, eventDate, location, price, description } = req.body;
@@ -44,11 +35,7 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-/* ==========================================================
-   PATCH /bookings/:id/respond
-   body: { status: "accepted" | "rejected" }
-   Only the *target* can accept/reject.
-   ========================================================== */
+// Respond to Booking (accept / reject)
 exports.respondBooking = async (req, res) => {
   try {
     const { status } = req.body;               // accepted / rejected
@@ -75,15 +62,12 @@ exports.respondBooking = async (req, res) => {
   }
 };
 
-/* ==========================================================
-   GET /bookings/incoming   (what others requested from me)
-   GET /bookings/outgoing   (what I requested from others)
-   ========================================================== */
+// List Bookings (incoming / outgoing)
 exports.getIncoming = async (req, res) => {
   const list = await Booking.find({ targetUserId: req.user.uid })
                             .populate('bookedBy', 'email role')
                             .populate('bookedTarget')
-                            .sort({ createdAt: -1 });
+                          .sort({ createdAt: -1 });
   res.json({ status: true, data: list });
 };
 
@@ -95,9 +79,7 @@ exports.getOutgoing = async (req, res) => {
   res.json({ status: true, data: list });
 };
 
-/* ==========================================================
-   GET /bookings/:id   (single detail)
-   ========================================================== */
+// Get Booking by ID
 exports.getById = async (req, res) => {
   const booking = await Booking.findById(req.params.id)
                                .populate('bookedBy', 'email role')
