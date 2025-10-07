@@ -33,7 +33,6 @@ exports.updateAppUser = async (req, res) => {
 
     const updated = await AppUser.findOneAndUpdate({ userId }, updateData, { new: true, runValidators: true });
 
-    /* optional local-file cleanup (same as Artist) */
     if (req.file && existing.image && existing.image.startsWith(path.join(process.cwd(), 'uploads'))) {
       fs.unlink(existing.image, () => {});
     }
